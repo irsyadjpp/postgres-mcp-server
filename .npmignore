@@ -1,0 +1,42 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Development files
+.env*
+.env.example
+tests/
+coverage/
+jest.config.js
+tsconfig.json
+
+# Claude-specific files
+CLAUDE.md
+CLAUDE.local.md
+claude_config_example.json
+
+# Development dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git files
+.git/
+.gitignore
+
+# Temporary files
+*.tmp
+*.temp
+*.log

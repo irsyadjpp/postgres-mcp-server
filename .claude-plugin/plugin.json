@@ -1,0 +1,9 @@
+{
+  "name": "postgres",
+  "version": "1.0.0",
+  "description": "PostgreSQL MCP server with 40+ tools for database administration, performance monitoring, and Java backend integration",
+  "author": {
+    "name": "Irsyad"
+  },
+  "skills": "./skills/"
+}
