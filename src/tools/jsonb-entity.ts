@@ -41,7 +41,9 @@ export async function jsonbEntityTool(input: unknown): Promise<JsonbEntityOutput
     const { database_name, schema } = validation.data;
     const db = getDb(database_name);
 
-    const schemaFilter = schema ? sql`AND n.nspname = ${schema}` : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
+    const schemaFilter = schema
+      ? sql`AND n.nspname = ${schema}`
+      : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
 
     const attributesQuery = sql<JsonbEntityAttribute>`
       SELECT
@@ -116,35 +118,32 @@ export async function jsonbEntityTool(input: unknown): Promise<JsonbEntityOutput
       LIMIT 20
     `.execute(db);
 
+    const [attributesResult, patternsResult] = await Promise.all([attributesQuery, patternQuery]);
     const recommendations: string[] = [];
-    const attributes = attributesQuery.rows;
-    const patterns = patternQuery.rows;
+    const attributes = attributesResult.rows;
+    const patterns = patternsResult.rows;
 
     const noGin = attributes.filter((a) => !a.has_gin_index);
     if (noGin.length > 0) {
       recommendations.push(
-        `${noGin.length} JSONB columns without GIN index - add for @Convert query performance`
+        `${noGin.length} JSONB columns without GIN index - add for @Convert query performance`,
       );
     }
 
     const unindexedPatterns = patterns.filter((p) => !p.is_indexed);
     if (unindexedPatterns.length > 0) {
       recommendations.push(
-        `${unindexedPatterns.length} JSONB query patterns without index coverage`
+        `${unindexedPatterns.length} JSONB query patterns without index coverage`,
       );
     }
 
     recommendations.push(
-      'Use @Convert(converter = JsonConverter.class) for JSONB entity attributes'
+      "Use @Convert(converter = JsonConverter.class) for JSONB entity attributes",
     );
+    recommendations.push("Consider Hypersistence Utils for advanced JSONB type support");
+    recommendations.push("Use @TypeDef and @Type for custom JSONB converters in Hibernate");
     recommendations.push(
-      'Consider Hypersistence Utils for advanced JSONB type support'
-    );
-    recommendations.push(
-      'Use @TypeDef and @Type for custom JSONB converters in Hibernate'
-    );
-    recommendations.push(
-      'Monitor JSONB storage efficiency - consider compression for large JSON documents'
+      "Monitor JSONB storage efficiency - consider compression for large JSON documents",
     );
 
     return {

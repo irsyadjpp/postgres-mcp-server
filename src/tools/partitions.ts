@@ -1,5 +1,6 @@
 import { sql } from "kysely";
 import { getDb } from "../db.js";
+import { ListPartitionsInputSchema, validateInput } from "../validation.js";
 
 export interface PartitionInfo {
   schema_name: string;
@@ -85,10 +86,7 @@ export async function listPartitionsTool(input: unknown): Promise<ListPartitions
       ORDER BY schemaname, relname
     `.execute(db);
 
-    const [partitionsResult, pruningResult] = await Promise.all([
-      partitionsQuery,
-      pruningQuery,
-    ]);
+    const [partitionsResult, pruningResult] = await Promise.all([partitionsQuery, pruningQuery]);
 
     return {
       partitions: partitionsResult.rows,

@@ -23,7 +23,8 @@ describe("Package Structure", () => {
       expect(pkg.bin).toHaveProperty("postgres-mcp");
 
       // Check required dependencies
-      expect(pkg.dependencies).toHaveProperty("@modelcontextprotocol/sdk");
+      expect(pkg.dependencies).toHaveProperty("@modelcontextprotocol/server");
+      expect(pkg.dependencies).toHaveProperty("@modelcontextprotocol/client");
       expect(pkg.dependencies).toHaveProperty("kysely");
       expect(pkg.dependencies).toHaveProperty("pg");
       expect(pkg.dependencies).toHaveProperty("dotenv");

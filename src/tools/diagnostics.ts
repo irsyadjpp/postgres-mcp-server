@@ -286,7 +286,7 @@ export async function diagnoseDatabaseTool(input: unknown): Promise<DiagnoseData
       fn: () => Promise<CheckResult>;
       condition?: boolean;
     }> = [
-      { name: "cache_hit_ratio", fn: () => checkCacheHitRatio(database_name) },
+      { name: "cache_hit_ratio", fn: () => checkCacheHitRatio() },
       {
         name: "connection_saturation",
         fn: () => checkConnectionSaturation(database_name),
@@ -298,7 +298,7 @@ export async function diagnoseDatabaseTool(input: unknown): Promise<DiagnoseData
         condition: include_queries !== false,
       },
       { name: "blocking_locks", fn: () => checkBlockingLocks(database_name) },
-      { name: "vacuum_health", fn: () => checkVacuumHealth(database_name) },
+      { name: "vacuum_health", fn: () => checkVacuumHealth() },
       { name: "unused_indexes", fn: () => checkUnusedIndexes(database_name) },
       { name: "duplicate_indexes", fn: () => checkDuplicateIndexes(database_name) },
       { name: "sequence_health", fn: () => checkSequenceHealth(database_name) },

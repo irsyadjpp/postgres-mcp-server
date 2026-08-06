@@ -40,7 +40,9 @@ export async function jpaSchemaValidationTool(input: unknown): Promise<JpaSchema
     const { database_name, schema } = validation.data;
     const db = getDb(database_name);
 
-    const schemaFilter = schema ? sql`AND n.nspname = ${schema}` : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
+    const schemaFilter = schema
+      ? sql`AND n.nspname = ${schema}`
+      : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
 
     const issuesQuery = sql<SchemaValidationIssue>`
       SELECT
@@ -87,45 +89,32 @@ export async function jpaSchemaValidationTool(input: unknown): Promise<JpaSchema
       LIMIT 30
     `.execute(db);
 
+    const [issuesResult, annotationsResult] = await Promise.all([issuesQuery, annotationQuery]);
     const recommendations: string[] = [];
-    const issues = issuesQuery.rows;
-    const annotations = annotationQuery.rows;
+    const issues = issuesResult.rows;
+    const annotations = annotationsResult.rows;
 
-    const missingPk = annotationQuery.filter((a) => !a.has_table_annotation);
+    const missingPk = annotations.filter((a) => !a.has_table_annotation);
     if (missingPk.length > 0) {
       recommendations.push(
-        `${missingPk.length} tables may be missing @Table annotation - verify entity mapping`
+        `${missingPk.length} tables may be missing @Table annotation - verify entity mapping`,
       );
     }
 
-    const noUnique = annotationQuery.filter((a) => !a.has_unique_constraint);
+    const noUnique = annotations.filter((a) => !a.has_unique_constraint);
     if (noUnique.length > 0) {
       recommendations.push(
-        `${noUnique.length} tables without unique constraints - consider @Column(unique = true)`
+        `${noUnique.length} tables without unique constraints - consider @Column(unique = true)`,
       );
     }
 
-    recommendations.push(
-      'Use @Table(name = "table_name") for explicit table mapping'
-    );
-    recommendations.push(
-      'Use @Column(name = "column_name") for column name mapping'
-    );
-    recommendations.push(
-      'Use @Index annotation for frequently queried columns'
-    );
-    recommendations.push(
-      'Use @UniqueConstraint for multi-column unique constraints'
-    );
-    recommendations.push(
-      'Enable spring.jpa.hibernate.ddl-auto=validate in development'
-    );
-    recommendations.push(
-      'Use Hibernate SchemaManager.validate() for schema validation'
-    );
-    recommendations.push(
-      'Review @Enumerated annotation for enum column mappings'
-    );
+    recommendations.push('Use @Table(name = "table_name") for explicit table mapping');
+    recommendations.push('Use @Column(name = "column_name") for column name mapping');
+    recommendations.push("Use @Index annotation for frequently queried columns");
+    recommendations.push("Use @UniqueConstraint for multi-column unique constraints");
+    recommendations.push("Enable spring.jpa.hibernate.ddl-auto=validate in development");
+    recommendations.push("Use Hibernate SchemaManager.validate() for schema validation");
+    recommendations.push("Review @Enumerated annotation for enum column mappings");
 
     return {
       validation_issues: issues,

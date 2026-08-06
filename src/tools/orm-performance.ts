@@ -87,39 +87,44 @@ export async function ormPerformanceTool(input: unknown): Promise<OrmPerformance
       LIMIT 10
     `.execute(db);
 
+    const [nPlusOneResult, lazyLoadingResult] = await Promise.all([
+      nPlusOneQuery,
+      lazyLoadingQuery,
+    ]);
+
     const recommendations: string[] = [];
-    const nPlusOne = nPlusOneQuery.rows;
-    const lazyLoading = lazyLoadingQuery.rows;
+    const nPlusOne = nPlusOneResult.rows;
+    const lazyLoading = lazyLoadingResult.rows;
 
     const suspectedNPlusOne = nPlusOne.filter((q) => q.suspected_n_plus_one);
     if (suspectedNPlusOne.length > 0) {
       recommendations.push(
-        `${suspectedNPlusOne.length} queries suspected of N+1 problem - use JOIN FETCH or @EntityGraph`
+        `${suspectedNPlusOne.length} queries suspected of N+1 problem - use JOIN FETCH or @EntityGraph`,
       );
     }
 
     const highCallCount = nPlusOne.filter((q) => q.calls > 1000);
     if (highCallCount.length > 0) {
       recommendations.push(
-        `${highCallCount.length} queries with high call count - consider query caching or batch operations`
+        `${highCallCount.length} queries with high call count - consider query caching or batch operations`,
       );
     }
 
     const slowQueries = nPlusOne.filter((q) => q.total_exec_time_ms / q.calls > 50);
     if (slowQueries.length > 0) {
       recommendations.push(
-        `${slowQueries.length} slow queries detected - review indexes and query optimization`
+        `${slowQueries.length} slow queries detected - review indexes and query optimization`,
       );
     }
 
     recommendations.push(
-      'Enable Hibernate statistics: spring.jpa.properties.hibernate.generate_statistics=true'
+      "Enable Hibernate statistics: spring.jpa.properties.hibernate.generate_statistics=true",
     );
     recommendations.push(
-      'Use @BatchSize annotation for collections to reduce lazy loading overhead'
+      "Use @BatchSize annotation for collections to reduce lazy loading overhead",
     );
     recommendations.push(
-      'Consider second-level cache (Hibernate) or Spring Cache for frequently accessed entities'
+      "Consider second-level cache (Hibernate) or Spring Cache for frequently accessed entities",
     );
 
     return {

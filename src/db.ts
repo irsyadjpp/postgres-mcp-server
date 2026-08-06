@@ -1,6 +1,6 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
 import * as dotenv from "dotenv";
-import * as fs from "fs";
-import * as path from "path";
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool, type PoolConfig } from "pg";
 
@@ -85,7 +85,9 @@ class DatabaseManager {
         this.configurations.set(name, this.normalizeConfig(dbConfig));
       }
     } catch (error) {
-      throw new Error(`Failed to load config from ${configPath}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to load config from ${configPath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -126,7 +128,9 @@ class DatabaseManager {
       const password = process.env[`${prefix}PASSWORD`];
 
       if (!password) {
-        console.warn(`Skipping database '${dbName.toLowerCase()}': DB_${dbName}_PASSWORD is required`);
+        console.warn(
+          `Skipping database '${dbName.toLowerCase()}': DB_${dbName}_PASSWORD is required`,
+        );
         continue;
       }
 
@@ -145,13 +149,13 @@ class DatabaseManager {
     }
   }
 
-  private normalizeConfig(config: any): DatabaseConfig {
+  private normalizeConfig(config: Partial<DatabaseConfig>): DatabaseConfig {
     return {
       host: config.host || "127.0.0.1",
       port: config.port || 5432,
       user: config.user || "postgres",
-      password: config.password,
-      database: config.database,
+      password: config.password || "",
+      database: config.database || "postgres",
       maxConnections: config.maxConnections || 5,
       idleTimeoutMs: config.idleTimeoutMs || 5000,
       connectionTimeoutMs: config.connectionTimeoutMs || 10000,
@@ -164,7 +168,9 @@ class DatabaseManager {
     return this.buildSSLConfigForPrefix("DB_");
   }
 
-  private buildSSLConfigForPrefix(prefix: string): boolean | { rejectUnauthorized: boolean; ca?: string } {
+  private buildSSLConfigForPrefix(
+    prefix: string,
+  ): boolean | { rejectUnauthorized: boolean; ca?: string } {
     if (process.env[`${prefix}SSL`] === "false") {
       return false;
     }
@@ -253,18 +259,17 @@ class DatabaseManager {
     this.connections.set(name, { db, pool, config: dbConfig });
   }
 
-
   public async close(): Promise<void> {
     const closePromises: Promise<void>[] = [];
 
-    for (const [name, connection] of this.connections.entries()) {
+    for (const [_name, connection] of this.connections.entries()) {
       closePromises.push(
         (async () => {
           await connection.db.destroy();
           if (!connection.pool.ended) {
             await connection.pool.end();
           }
-        })()
+        })(),
       );
     }
 
@@ -291,10 +296,7 @@ class DatabaseManager {
       const name = databaseName || "default";
       const db = this.getDb(name);
 
-      await db.selectFrom("information_schema.tables")
-        .select("table_name")
-        .limit(1)
-        .execute();
+      await db.selectFrom("information_schema.tables").select("table_name").limit(1).execute();
 
       return { healthy: true };
     } catch (error) {

@@ -41,7 +41,9 @@ export async function timeseriesPartitionTool(input: unknown): Promise<Timeserie
     const { database_name, schema } = validation.data;
     const db = getDb(database_name);
 
-    const schemaFilter = schema ? sql`AND n.nspname = ${schema}` : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
+    const schemaFilter = schema
+      ? sql`AND n.nspname = ${schema}`
+      : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
 
     const tablesQuery = sql<TimeSeriesTable>`
       SELECT
@@ -121,41 +123,35 @@ export async function timeseriesPartitionTool(input: unknown): Promise<Timeserie
       LIMIT 10
     `.execute(db);
 
+    const [tablesResult, strategiesResult] = await Promise.all([tablesQuery, strategyQuery]);
+
     const recommendations: string[] = [];
-    const tables = tablesQuery.rows;
-    const strategies = strategyQuery.rows;
+    const tables = tablesResult.rows;
+    const strategies = strategiesResult.rows;
 
     const candidates = tables.filter((t) => t.has_timestamp_column && !t.is_partitioned);
     if (candidates.length > 0) {
       recommendations.push(
-        `${candidates.length} time-series tables could benefit from partitioning`
+        `${candidates.length} time-series tables could benefit from partitioning`,
       );
     }
 
     const largeUnpartitioned = tables.filter(
-      (t) => t.has_timestamp_column && !t.is_partitioned && t.row_count > 1000000
+      (t) => t.has_timestamp_column && !t.is_partitioned && t.row_count > 1000000,
     );
     if (largeUnpartitioned.length > 0) {
       recommendations.push(
-        `${largeUnpartitioned.length} large time-series tables (>1M rows) - prioritize partitioning`
+        `${largeUnpartitioned.length} large time-series tables (>1M rows) - prioritize partitioning`,
       );
     }
 
+    recommendations.push("Use PARTITION BY RANGE for timestamp-based partitioning");
     recommendations.push(
-      'Use PARTITION BY RANGE for timestamp-based partitioning'
+      "Align partition intervals with application time windows (daily, weekly, monthly)",
     );
-    recommendations.push(
-      'Align partition intervals with application time windows (daily, weekly, monthly)'
-    );
-    recommendations.push(
-      'Use declarative partitioning (PostgreSQL 10+) for easier management'
-    );
-    recommendations.push(
-      'Consider partition pruning for improved query performance'
-    );
-    recommendations.push(
-      'Set up automated partition maintenance with pg_partman extension'
-    );
+    recommendations.push("Use declarative partitioning (PostgreSQL 10+) for easier management");
+    recommendations.push("Consider partition pruning for improved query performance");
+    recommendations.push("Set up automated partition maintenance with pg_partman extension");
 
     return {
       timeseries_tables: tables,

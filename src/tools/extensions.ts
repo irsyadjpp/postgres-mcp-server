@@ -1,5 +1,6 @@
 import { sql } from "kysely";
 import { getDb } from "../db.js";
+import { ExtensionsInputSchema, validateInput } from "../validation.js";
 
 export interface ExtensionInfo {
   extension_name: string;

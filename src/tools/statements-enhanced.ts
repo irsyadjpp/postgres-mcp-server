@@ -29,7 +29,7 @@ export interface EnhancedStatementsOutput {
   timestamp?: string;
 }
 
-export async function statementsEnhancedTool(input: unknown): Promise<EnhancedStatementsOutput> {
+export async function statementsEnhancedTool(_input: unknown): Promise<EnhancedStatementsOutput> {
   try {
     const db = getDb();
 
@@ -59,8 +59,10 @@ export async function statementsEnhancedTool(input: unknown): Promise<EnhancedSt
       LIMIT 50
     `.execute(db);
 
+    const [queryResult] = await Promise.all([query]);
+
     return {
-      statements: query.rows,
+      statements: queryResult.rows,
       timestamp: new Date().toISOString(),
     };
   } catch (error) {

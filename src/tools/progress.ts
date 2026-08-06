@@ -1,5 +1,6 @@
 import { sql } from "kysely";
 import { getDb } from "../db.js";
+import { ProgressReportInputSchema, validateInput } from "../validation.js";
 
 export interface VacuumProgress {
   pid: number;

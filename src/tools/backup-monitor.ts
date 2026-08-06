@@ -95,10 +95,7 @@ export async function backupMonitorTool(input: unknown): Promise<BackupMonitorOu
         ) as recovery_min_apply_delay
     `.execute(db);
 
-    const [backupResult, pitrResult] = await Promise.all([
-      backupQuery,
-      pitrQuery,
-    ]);
+    const [backupResult, pitrResult] = await Promise.all([backupQuery, pitrQuery]);
 
     return {
       backup_info: backupResult.rows[0],

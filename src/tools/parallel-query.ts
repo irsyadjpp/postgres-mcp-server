@@ -1,5 +1,6 @@
 import { sql } from "kysely";
 import { getDb } from "../db.js";
+import { ParallelQueryInputSchema, validateInput } from "../validation.js";
 
 export interface ParallelQueryInfo {
   query_id: string;
@@ -68,10 +69,7 @@ export async function parallelQueryTool(input: unknown): Promise<ParallelQueryOu
       WHERE COALESCE(plan_total_time, 0) > 0
     `.execute(db);
 
-    const [queriesResult, statsResult] = await Promise.all([
-      queriesQuery,
-      statsQuery,
-    ]);
+    const [queriesResult, statsResult] = await Promise.all([queriesQuery, statsQuery]);
 
     const statsRow = statsResult.rows[0];
     const workerStats: ParallelWorkerStats = {
@@ -92,5 +90,4 @@ export async function parallelQueryTool(input: unknown): Promise<ParallelQueryOu
       error: error instanceof Error ? error.message : "Unknown error occurred",
     };
   }
-}
 }

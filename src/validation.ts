@@ -5,11 +5,18 @@ export const QueryInputSchema = z.object({
   parameters: z.array(z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
   pageSize: z.number().min(1).max(500).optional(),
   offset: z.number().min(0).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export const QueryOutputSchema = z.object({
-  rows: z.array(z.record(z.any())).optional().describe("Query result rows (for SELECT queries)"),
+  rows: z
+    .array(z.record(z.string(), z.any()))
+    .optional()
+    .describe("Query result rows (for SELECT queries)"),
   rowCount: z.number().optional().describe("Number of rows affected/returned"),
   error: z.string().optional().describe("Error message if query failed"),
   code: z.string().optional().describe("Error code for categorized errors"),
@@ -36,7 +43,11 @@ export const DescribeTableInputSchema = z.object({
     .min(1, "Table name is required")
     .max(63, "Table name too long")
     .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid table name format"),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export const ListObjectsInputSchema = z.object({
@@ -47,12 +58,20 @@ export const ListObjectsInputSchema = z.object({
     .max(63)
     .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
     .optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export const ListSchemasInputSchema = z.object({
   includeSystemSchemas: z.boolean().optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export const ListIndexesInputSchema = z.object({
@@ -67,7 +86,11 @@ export const ListIndexesInputSchema = z.object({
     .max(63)
     .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid table name format")
     .optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export const ExplainQueryInputSchema = z.object({
@@ -76,7 +99,11 @@ export const ExplainQueryInputSchema = z.object({
   buffers: z.boolean().optional(),
   costs: z.boolean().optional(),
   format: z.enum(["text", "json", "xml", "yaml"]).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export const SearchObjectsInputSchema = z.object({
@@ -86,7 +113,11 @@ export const SearchObjectsInputSchema = z.object({
     .optional(),
   schemas: z.array(z.string().min(1).max(63)).optional(),
   limit: z.number().min(1).max(100).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export type SearchObjectsInput = z.infer<typeof SearchObjectsInputSchema>;
@@ -94,7 +125,11 @@ export type SearchObjectsInput = z.infer<typeof SearchObjectsInputSchema>;
 export const GetConnectionsInputSchema = z.object({
   include_queries: z.boolean().optional(),
   group_by: z.enum(["state", "user", "application", "client"]).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export type GetConnectionsInput = z.infer<typeof GetConnectionsInputSchema>;
@@ -102,7 +137,11 @@ export type GetConnectionsInput = z.infer<typeof GetConnectionsInputSchema>;
 export const DiagnoseDatabaseInputSchema = z.object({
   include_queries: z.boolean().optional(),
   include_connections: z.boolean().optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export type DiagnoseDatabaseInput = z.infer<typeof DiagnoseDatabaseInputSchema>;
@@ -113,7 +152,11 @@ export const GetSlowQueriesInputSchema = z.object({
   min_calls: z.number().min(0).optional(),
   min_duration_ms: z.number().min(0).optional(),
   include_query_text: z.boolean().optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format").optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Invalid database name format")
+    .optional(),
 });
 
 export const ConnectionConfigSchema = z.object({
@@ -122,7 +165,12 @@ export const ConnectionConfigSchema = z.object({
   user: z.string().min(1),
   password: z.string().min(1),
   database: z.string().min(1),
-  ssl: z.union([z.boolean(), z.object({ rejectUnauthorized: z.boolean().optional(), ca: z.string().optional() })]).optional(),
+  ssl: z
+    .union([
+      z.boolean(),
+      z.object({ rejectUnauthorized: z.boolean().optional(), ca: z.string().optional() }),
+    ])
+    .optional(),
 });
 
 export type ConnectionConfig = z.infer<typeof ConnectionConfigSchema>;
@@ -138,7 +186,7 @@ export function validateInput<T>(
     return { success: true, data };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       return {
         success: false,
         error: `${firstError.path.join(".")}: ${firstError.message}`,
@@ -162,78 +210,208 @@ export type ExplainQueryInput = z.infer<typeof ExplainQueryInputSchema>;
 // New tool schemas for PostgreSQL 12-18 features
 
 export const ListPartitionsInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  table: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  table: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const ReplicationStatusInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const ProgressReportInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const WALMonitorInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const ExtendedStatsInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  table: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  table: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const IndexDedupInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  table: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  table: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const GeneratedColumnsInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  table: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  table: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const JSONBAnalysisInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  table: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  table: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const ParallelQueryInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const AutovacuumAdvisorInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  table: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  table: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const HugePagesInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const StatementsEnhancedInputSchema = z.object({
   limit: z.number().min(1).max(100).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const ForeignKeyInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  table: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  table: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const BackupMonitorInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const ExtensionsInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 // Type exports for new tools
@@ -256,69 +434,159 @@ export type ExtensionsInput = z.infer<typeof ExtensionsInputSchema>;
 // Java Backend Tools Schemas
 
 export const ConnectionPoolInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const JpaMappingInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const OrmPerformanceInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const TransactionMonitorInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const PreparedStatementInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const MigrationTrackingInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const OrmIndexCoverageInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const JsonbEntityInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const BatchOperationInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const SequenceMonitorInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const TimeseriesPartitionInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const ConnectionLeakInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const DeadlockAnalysisInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const JpaSchemaValidationInputSchema = z.object({
-  schema: z.string().min(1).max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 export const OrmPerformanceBaselineInputSchema = z.object({
-  database_name: z.string().max(63).regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/).optional(),
+  database_name: z
+    .string()
+    .max(63)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/)
+    .optional(),
 });
 
 // Type exports for Java backend tools

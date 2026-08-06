@@ -77,41 +77,28 @@ export async function deadlockAnalysisTool(input: unknown): Promise<DeadlockAnal
       LIMIT 50
     `.execute(db);
 
+    const [deadlockResult, lockWaitResult] = await Promise.all([deadlockQuery, lockWaitQuery]);
     const recommendations: string[] = [];
-    const deadlocks = deadlockQuery.rows;
-    const lockWaits = lockWaitQuery.rows;
+    const deadlocks = deadlockResult.rows;
+    const lockWaits = lockWaitResult.rows;
 
     const deadlockRisk = lockWaits.filter((l) => l.is_deadlock_risk);
     if (deadlockRisk.length > 0) {
       recommendations.push(
-        `${deadlockRisk.length} connections with deadlock risk - review transaction ordering`
+        `${deadlockRisk.length} connections with deadlock risk - review transaction ordering`,
       );
     }
 
+    recommendations.push("Set appropriate lock_timeout: SET lock_timeout = 5000 (5 seconds)");
+    recommendations.push("Use consistent table access order across transactions");
+    recommendations.push("Keep transactions short and minimize lock hold time");
+    recommendations.push("Use SELECT ... FOR UPDATE SKIP LOCKED to avoid blocking");
     recommendations.push(
-      'Set appropriate lock_timeout: SET lock_timeout = 5000 (5 seconds)'
+      "Consider READ COMMITTED isolation level instead of SERIALIZABLE when possible",
     );
-    recommendations.push(
-      'Use consistent table access order across transactions'
-    );
-    recommendations.push(
-      'Keep transactions short and minimize lock hold time'
-    );
-    recommendations.push(
-      'Use SELECT ... FOR UPDATE SKIP LOCKED to avoid blocking'
-    );
-    recommendations.push(
-      'Consider READ COMMITTED isolation level instead of SERIALIZABLE when possible'
-    );
-    recommendations.push(
-      'Review @Transactional isolation level settings in Spring Boot'
-    );
-    recommendations.push(
-      'Monitor pg_locks and pg_stat_activity for lock contention'
-    );
-    recommendations.push(
-      'Enable log_lock_waits in PostgreSQL to log long lock waits'
-    );
+    recommendations.push("Review @Transactional isolation level settings in Spring Boot");
+    recommendations.push("Monitor pg_locks and pg_stat_activity for lock contention");
+    recommendations.push("Enable log_lock_waits in PostgreSQL to log long lock waits");
 
     return {
       deadlock_events: deadlocks,

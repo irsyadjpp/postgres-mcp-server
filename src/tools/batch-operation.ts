@@ -68,31 +68,24 @@ export async function batchOperationTool(input: unknown): Promise<BatchOperation
       LIMIT 20
     `.execute(db);
 
+    const [statsResult, performanceResult] = await Promise.all([statsQuery, performanceQuery]);
     const recommendations: string[] = [];
-    const stats = statsQuery.rows[0];
-    const performance = performanceQuery.rows;
+    const stats = statsResult.rows[0];
+    const performance = performanceResult.rows;
 
     recommendations.push(
-      'Configure JDBC batch size: spring.jpa.properties.hibernate.jdbc.batch_size=50'
+      "Configure JDBC batch size: spring.jpa.properties.hibernate.jdbc.batch_size=50",
     );
     recommendations.push(
-      'Enable batch inserts: spring.jpa.properties.hibernate.order_inserts=true'
+      "Enable batch inserts: spring.jpa.properties.hibernate.order_inserts=true",
     );
     recommendations.push(
-      'Enable batch updates: spring.jpa.properties.hibernate.order_updates=true'
+      "Enable batch updates: spring.jpa.properties.hibernate.order_updates=true",
     );
-    recommendations.push(
-      'Use @Transactional with appropriate propagation for batch operations'
-    );
-    recommendations.push(
-      'Consider Spring Batch for large-scale batch processing'
-    );
-    recommendations.push(
-      'Monitor connection pool size during batch operations'
-    );
-    recommendations.push(
-      'Use reWriteBatchedInserts=true in JDBC URL for PostgreSQL'
-    );
+    recommendations.push("Use @Transactional with appropriate propagation for batch operations");
+    recommendations.push("Consider Spring Batch for large-scale batch processing");
+    recommendations.push("Monitor connection pool size during batch operations");
+    recommendations.push("Use reWriteBatchedInserts=true in JDBC URL for PostgreSQL");
 
     return {
       batch_stats: stats,

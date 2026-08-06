@@ -1,50 +1,48 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-
+import { Server } from "@modelcontextprotocol/server";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { closeDb } from "./db.js";
+import { autovacuumAdvisorTool } from "./tools/autovacuum-advisor.js";
+import { backupMonitorTool } from "./tools/backup-monitor.js";
+import { batchOperationTool } from "./tools/batch-operation.js";
+import { connectionLeakTool } from "./tools/connection-leak.js";
+import { connectionPoolTool } from "./tools/connection-pool.js";
 import { getConnectionsTool } from "./tools/connections.js";
+import { deadlockAnalysisTool } from "./tools/deadlock-analysis.js";
 import { describeTableTool } from "./tools/describe.js";
 import { diagnoseDatabaseTool } from "./tools/diagnostics.js";
-import { listIndexesTool } from "./tools/indexes.js";
-import { listObjectsTool } from "./tools/list.js";
-import { explainQueryTool } from "./tools/performance.js";
-import { queryTool } from "./tools/query.js";
-import { listSchemasTool } from "./tools/schemas.js";
-import { searchObjectsTool } from "./tools/search.js";
-import { getSlowQueriesTool } from "./tools/slow-queries.js";
-import { listPartitionsTool } from "./tools/partitions.js";
-import { replicationStatusTool } from "./tools/replication.js";
-import { progressReportTool } from "./tools/progress.js";
-import { walMonitorTool } from "./tools/wal.js";
 import { extendedStatsTool } from "./tools/extended-stats.js";
-import { indexDedupTool } from "./tools/index-dedup.js";
-import { generatedColumnsTool } from "./tools/generated-columns.js";
-import { jsonbAnalysisTool } from "./tools/jsonb-analysis.js";
-import { parallelQueryTool } from "./tools/parallel-query.js";
-import { autovacuumAdvisorTool } from "./tools/autovacuum-advisor.js";
-import { hugePagesTool } from "./tools/huge-pages.js";
-import { statementsEnhancedTool } from "./tools/statements-enhanced.js";
-import { foreignKeyTool } from "./tools/foreign-key.js";
-import { backupMonitorTool } from "./tools/backup-monitor.js";
 import { extensionsTool } from "./tools/extensions.js";
-import { connectionPoolTool } from "./tools/connection-pool.js";
+import { foreignKeyTool } from "./tools/foreign-key.js";
+import { generatedColumnsTool } from "./tools/generated-columns.js";
+import { hugePagesTool } from "./tools/huge-pages.js";
+import { indexDedupTool } from "./tools/index-dedup.js";
+import { listIndexesTool } from "./tools/indexes.js";
 import { jpaMappingTool } from "./tools/jpa-mapping.js";
-import { ormPerformanceTool } from "./tools/orm-performance.js";
-import { transactionMonitorTool } from "./tools/transaction-monitor.js";
-import { preparedStatementTool } from "./tools/prepared-statement.js";
+import { jpaSchemaValidationTool } from "./tools/jpa-schema-validation.js";
+import { jsonbAnalysisTool } from "./tools/jsonb-analysis.js";
+import { jsonbEntityTool } from "./tools/jsonb-entity.js";
+import { listObjectsTool } from "./tools/list.js";
 import { migrationTrackingTool } from "./tools/migration-tracking.js";
 import { ormIndexCoverageTool } from "./tools/orm-index-coverage.js";
-import { jsonbEntityTool } from "./tools/jsonb-entity.js";
-import { batchOperationTool } from "./tools/batch-operation.js";
-import { sequenceMonitorTool } from "./tools/sequence-monitor.js";
-import { timeseriesPartitionTool } from "./tools/timeseries-partition.js";
-import { connectionLeakTool } from "./tools/connection-leak.js";
-import { deadlockAnalysisTool } from "./tools/deadlock-analysis.js";
-import { jpaSchemaValidationTool } from "./tools/jpa-schema-validation.js";
+import { ormPerformanceTool } from "./tools/orm-performance.js";
 import { ormPerformanceBaselineTool } from "./tools/orm-performance-baseline.js";
+import { parallelQueryTool } from "./tools/parallel-query.js";
+import { listPartitionsTool } from "./tools/partitions.js";
+import { explainQueryTool } from "./tools/performance.js";
+import { preparedStatementTool } from "./tools/prepared-statement.js";
+import { progressReportTool } from "./tools/progress.js";
+import { queryTool } from "./tools/query.js";
+import { replicationStatusTool } from "./tools/replication.js";
+import { listSchemasTool } from "./tools/schemas.js";
+import { searchObjectsTool } from "./tools/search.js";
+import { sequenceMonitorTool } from "./tools/sequence-monitor.js";
+import { getSlowQueriesTool } from "./tools/slow-queries.js";
+import { statementsEnhancedTool } from "./tools/statements-enhanced.js";
+import { timeseriesPartitionTool } from "./tools/timeseries-partition.js";
+import { transactionMonitorTool } from "./tools/transaction-monitor.js";
+import { walMonitorTool } from "./tools/wal.js";
 import {
   AutovacuumAdvisorInputSchema,
   BackupMonitorInputSchema,
@@ -85,15 +83,28 @@ import {
   StatementsEnhancedInputSchema,
   TimeseriesPartitionInputSchema,
   TransactionMonitorInputSchema,
-  WALMonitorInputSchema,
   validateInput,
+  WALMonitorInputSchema,
 } from "./validation.js";
 
-// Helper to extract inline schema from zodToJsonSchema output
-// biome-ignore lint/suspicious/noExplicitAny: zod-to-json-schema accepts any Zod schema type
+// Helper to extract inline schema from zod v4 native JSON Schema support
+// biome-ignore lint/suspicious/noExplicitAny: zodSchema can be any Zod schema type
 function getInlineSchema(zodSchema: any, name: string) {
+  if (typeof zodSchema.toJSONSchema === "function") {
+    const jsonSchema = zodSchema.toJSONSchema();
+    const { $schema, ...rest } = jsonSchema;
+    return rest;
+  }
+  // Fallback for older zod versions
   const jsonSchema = zodToJsonSchema(zodSchema, { name });
-  return jsonSchema.definitions?.[name] || jsonSchema;
+  const schema = jsonSchema.definitions?.[name] || jsonSchema;
+  return {
+    type: "object" as const,
+    // biome-ignore lint/suspicious/noExplicitAny: fallback schema is dynamic JSON
+    properties: (schema as any).properties || {},
+    // biome-ignore lint/suspicious/noExplicitAny: fallback schema is dynamic JSON
+    ...((schema as any).required ? { required: (schema as any).required } : {}),
+  };
 }
 
 const server = new Server(
@@ -108,7 +119,7 @@ const server = new Server(
   },
 );
 
-server.setRequestHandler(ListToolsRequestSchema, async () => {
+server.setRequestHandler("tools/list", async () => {
   return {
     tools: [
       {
@@ -165,12 +176,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "list_partitions",
-        description: "List partitioned tables and monitor partition pruning efficiency (PostgreSQL 12+)",
+        description:
+          "List partitioned tables and monitor partition pruning efficiency (PostgreSQL 12+)",
         inputSchema: getInlineSchema(ListPartitionsInputSchema, "ListPartitionsInput"),
       },
       {
         name: "replication_status",
-        description: "Monitor logical replication: publications, subscriptions, and lag (PostgreSQL 13+)",
+        description:
+          "Monitor logical replication: publications, subscriptions, and lag (PostgreSQL 13+)",
         inputSchema: getInlineSchema(ReplicationStatusInputSchema, "ReplicationStatusInput"),
       },
       {
@@ -185,7 +198,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "extended_stats",
-        description: "List extended statistics and provide recommendations for multi-column correlations",
+        description:
+          "List extended statistics and provide recommendations for multi-column correlations",
         inputSchema: getInlineSchema(ExtendedStatsInputSchema, "ExtendedStatsInput"),
       },
       {
@@ -240,7 +254,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "connection_pool",
-        description: "Monitor HikariCP connection pool metrics, detect connection leaks, and track wait times",
+        description:
+          "Monitor HikariCP connection pool metrics, detect connection leaks, and track wait times",
         inputSchema: getInlineSchema(ConnectionPoolInputSchema, "ConnectionPoolInput"),
       },
       {
@@ -250,12 +265,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "orm_performance",
-        description: "Analyze ORM query performance, detect N+1 problems, and identify lazy loading issues",
+        description:
+          "Analyze ORM query performance, detect N+1 problems, and identify lazy loading issues",
         inputSchema: getInlineSchema(OrmPerformanceInputSchema, "OrmPerformanceInput"),
       },
       {
         name: "transaction_monitor",
-        description: "Monitor active transactions, isolation levels, and detect long-running transactions",
+        description:
+          "Monitor active transactions, isolation levels, and detect long-running transactions",
         inputSchema: getInlineSchema(TransactionMonitorInputSchema, "TransactionMonitorInput"),
       },
       {
@@ -265,17 +282,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "migration_tracking",
-        description: "Track Flyway/Liquibase migrations, detect schema drift, and validate checksums",
+        description:
+          "Track Flyway/Liquibase migrations, detect schema drift, and validate checksums",
         inputSchema: getInlineSchema(MigrationTrackingInputSchema, "MigrationTrackingInput"),
       },
       {
         name: "orm_index_coverage",
-        description: "Analyze index coverage for ORM @Query annotations and recommend missing indexes",
+        description:
+          "Analyze index coverage for ORM @Query annotations and recommend missing indexes",
         inputSchema: getInlineSchema(OrmIndexCoverageInputSchema, "OrmIndexCoverageInput"),
       },
       {
         name: "jsonb_entity",
-        description: "Analyze JSONB columns for @Convert entity attributes and recommend GIN indexes",
+        description:
+          "Analyze JSONB columns for @Convert entity attributes and recommend GIN indexes",
         inputSchema: getInlineSchema(JsonbEntityInputSchema, "JsonbEntityInput"),
       },
       {
@@ -311,7 +331,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "orm_performance_baseline",
         description: "Establish and monitor performance baselines for ORM CRUD operations",
-        inputSchema: getInlineSchema(OrmPerformanceBaselineInputSchema, "OrmPerformanceBaselineInput"),
+        inputSchema: getInlineSchema(
+          OrmPerformanceBaselineInputSchema,
+          "OrmPerformanceBaselineInput",
+        ),
       },
     ],
   };
@@ -350,7 +373,7 @@ function createErrorResponse(error: string, code: string = "VALIDATION_ERROR") {
   };
 }
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler("tools/call", async (request) => {
   const { name, arguments: args } = request.params;
 
   try {
@@ -750,17 +773,17 @@ async function shutdown(signal: string) {
 }
 
 // Register signal handlers for graceful shutdown
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('uncaughtException', (error) => {
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("uncaughtException", (error) => {
   process.stderr.write(`Uncaught exception: ${error.message}\n`);
-  process.stderr.write(error.stack || '');
-  shutdown('uncaughtException');
+  process.stderr.write(error.stack || "");
+  shutdown("uncaughtException");
 });
-process.on('unhandledRejection', (reason, promise) => {
+process.on("unhandledRejection", (reason, promise) => {
   process.stderr.write(`Unhandled rejection at ${String(promise)}\n`);
   process.stderr.write(`Reason: ${String(reason)}\n`);
-  shutdown('unhandledRejection');
+  shutdown("unhandledRejection");
 });
 
 async function main() {
@@ -769,7 +792,9 @@ async function main() {
     await server.connect(transport);
     process.stderr.write("Postgres MCP Server running on stdio\n");
   } catch (error) {
-    process.stderr.write(`Failed to start server: ${error instanceof Error ? error.message : String(error)}\n`);
+    process.stderr.write(
+      `Failed to start server: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
     process.exit(1);
   }
 }

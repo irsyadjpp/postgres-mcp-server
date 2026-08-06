@@ -101,18 +101,15 @@ export async function jsonbAnalysisTool(input: unknown): Promise<JSONBAnalysisOu
       LIMIT 20
     `.execute(db);
 
-    const [columnsResult, patternsResult] = await Promise.all([
-      columnsQuery,
-      patternsQuery,
-    ]);
+    const [columnsResult, patternsResult] = await Promise.all([columnsQuery, patternsQuery]);
 
     const recommendations: string[] = [];
     const columnsWithoutGin = columnsResult.rows.filter(
-      (col: JSONBColumnInfo) => !col.has_gin_index && col.sample_count > 0
+      (col: JSONBColumnInfo) => !col.has_gin_index && col.sample_count > 0,
     );
     if (columnsWithoutGin.length > 0) {
       recommendations.push(
-        `${columnsWithoutGin.length} JSONB columns without GIN index - consider adding for better query performance`
+        `${columnsWithoutGin.length} JSONB columns without GIN index - consider adding for better query performance`,
       );
     }
 

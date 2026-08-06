@@ -1,5 +1,6 @@
 import { sql } from "kysely";
 import { getDb } from "../db.js";
+import { GeneratedColumnsInputSchema, validateInput } from "../validation.js";
 
 export interface GeneratedColumnInfo {
   schema_name: string;
@@ -55,8 +56,10 @@ export async function generatedColumnsTool(input: unknown): Promise<GeneratedCol
       ORDER BY n.nspname, c.relname, a.attnum
     `.execute(db);
 
+    const [columnsResult] = await Promise.all([columnsQuery]);
+
     return {
-      generated_columns: columnsQuery.rows,
+      generated_columns: columnsResult.rows,
     };
   } catch (error) {
     return {

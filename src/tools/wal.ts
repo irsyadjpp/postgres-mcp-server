@@ -1,6 +1,6 @@
 import { sql } from "kysely";
 import { getDb } from "../db.js";
-import { WALMonitorInputSchema, validateInput } from "../validation.js";
+import { validateInput, WALMonitorInputSchema } from "../validation.js";
 
 export interface WALInfo {
   wal_size_bytes: number;

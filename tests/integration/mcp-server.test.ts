@@ -1,8 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "@jest/globals";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { Client } from "@modelcontextprotocol/client";
+import { InMemoryTransport, Server } from "@modelcontextprotocol/server";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import {
   DescribeTableInputSchema,
@@ -24,6 +22,11 @@ import {
 } from "../setup/testcontainer";
 
 function getInlineSchema(zodSchema: any, name: string) {
+  if (typeof zodSchema.toJSONSchema === "function") {
+    const jsonSchema = zodSchema.toJSONSchema();
+    const { $schema, ...rest } = jsonSchema;
+    return rest;
+  }
   const jsonSchema = zodToJsonSchema(zodSchema, { name });
   return (jsonSchema as any).definitions?.[name] || jsonSchema;
 }
@@ -149,7 +152,7 @@ describeWithDocker("E2E MCP Client Integration Tests", () => {
       { capabilities: { tools: {} } },
     );
 
-    server.setRequestHandler(ListToolsRequestSchema, async () => {
+    server.setRequestHandler("tools/list", async () => {
       return {
         tools: Object.entries(schemaMap).map(([toolName, { zodSchema, name, description }]) => ({
           name: toolName,
@@ -159,7 +162,7 @@ describeWithDocker("E2E MCP Client Integration Tests", () => {
       };
     });
 
-    server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    server.setRequestHandler("tools/call", async (request) => {
       const { name, arguments: args } = request.params;
 
       try {

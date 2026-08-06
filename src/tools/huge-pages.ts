@@ -1,5 +1,6 @@
 import { sql } from "kysely";
 import { getDb } from "../db.js";
+import { HugePagesInputSchema, validateInput } from "../validation.js";
 
 export interface HugePagesInfo {
   huge_pages_enabled: boolean;
@@ -67,10 +68,10 @@ export async function hugePagesTool(input: unknown): Promise<HugePagesOutput> {
         END as recommendation
     `.execute(db);
 
-    const result = query.rows[0];
+    const [queryResult] = await Promise.all([query]);
 
     return {
-      huge_pages_info: result,
+      huge_pages_info: queryResult.rows[0],
       timestamp: new Date().toISOString(),
     };
   } catch (error) {

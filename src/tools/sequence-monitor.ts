@@ -42,7 +42,9 @@ export async function sequenceMonitorTool(input: unknown): Promise<SequenceMonit
     const { database_name, schema } = validation.data;
     const db = getDb(database_name);
 
-    const schemaFilter = schema ? sql`AND n.nspname = ${schema}` : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
+    const schemaFilter = schema
+      ? sql`AND n.nspname = ${schema}`
+      : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
 
     const sequenceQuery = sql<SequenceInfo>`
       SELECT
@@ -94,39 +96,38 @@ export async function sequenceMonitorTool(input: unknown): Promise<SequenceMonit
       LIMIT 20
     `.execute(db);
 
-    const recommendations: string[] = [];
-    const sequences = sequenceQuery.rows;
-    const performance = performanceQuery.rows;
+    const [sequencesResult, performanceResult] = await Promise.all([
+      sequenceQuery,
+      performanceQuery,
+    ]);
 
-    const highRisk = sequences.filter((s) => s.exhaustion_risk === 'HIGH');
+    const recommendations: string[] = [];
+    const sequences = sequencesResult.rows;
+    const performance = performanceResult.rows;
+
+    const highRisk = sequences.filter((s) => s.exhaustion_risk === "HIGH");
     if (highRisk.length > 0) {
       recommendations.push(
-        `${highRisk.length} sequences at high exhaustion risk - review @GeneratedValue strategy`
+        `${highRisk.length} sequences at high exhaustion risk - review @GeneratedValue strategy`,
       );
     }
 
     const lowCache = sequences.filter((s) => s.cache_value < 50);
     if (lowCache.length > 0) {
       recommendations.push(
-        `${lowCache.length} sequences with low cache value - consider increasing for better performance`
+        `${lowCache.length} sequences with low cache value - consider increasing for better performance`,
       );
     }
 
     recommendations.push(
-      'Use @GeneratedValue(strategy = GenerationType.IDENTITY) for auto-increment'
+      "Use @GeneratedValue(strategy = GenerationType.IDENTITY) for auto-increment",
     );
     recommendations.push(
-      'Use @GeneratedValue(strategy = GenerationType.SEQUENCE) with custom sequence for control'
+      "Use @GeneratedValue(strategy = GenerationType.SEQUENCE) with custom sequence for control",
     );
-    recommendations.push(
-      'Set sequence cache to match batch size for bulk inserts'
-    );
-    recommendations.push(
-      'Monitor sequence usage during high-volume insert operations'
-    );
-    recommendations.push(
-      'Consider HiLo algorithm for distributed systems'
-    );
+    recommendations.push("Set sequence cache to match batch size for bulk inserts");
+    recommendations.push("Monitor sequence usage during high-volume insert operations");
+    recommendations.push("Consider HiLo algorithm for distributed systems");
 
     return {
       sequences,

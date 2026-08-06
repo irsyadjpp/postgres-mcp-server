@@ -64,8 +64,10 @@ export async function indexDedupTool(input: unknown): Promise<IndexDedupOutput> 
       LIMIT 50
     `.execute(db);
 
+    const [dedupResult] = await Promise.all([dedupQuery]);
+
     return {
-      dedup_candidates: dedupQuery.rows,
+      dedup_candidates: dedupResult.rows,
     };
   } catch (error) {
     return {

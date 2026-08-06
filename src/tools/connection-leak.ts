@@ -92,49 +92,40 @@ export async function connectionLeakTool(input: unknown): Promise<ConnectionLeak
       LIMIT 20
     `.execute(db);
 
+    const [leakedResult, patternsResult] = await Promise.all([leakedQuery, patternQuery]);
     const recommendations: string[] = [];
-    const leaked = leakedQuery.rows;
-    const patterns = patternQuery.rows;
+    const leaked = leakedResult.rows;
+    const patterns = patternsResult.rows;
 
-    const critical = leaked.filter((l) => l.leak_severity === 'CRITICAL');
+    const critical = leaked.filter((l) => l.leak_severity === "CRITICAL");
     if (critical.length > 0) {
       recommendations.push(
-        `${critical.length} critical connection leaks detected - immediate action required`
+        `${critical.length} critical connection leaks detected - immediate action required`,
       );
     }
 
-    const high = leaked.filter((l) => l.leak_severity === 'HIGH');
+    const high = leaked.filter((l) => l.leak_severity === "HIGH");
     if (high.length > 0) {
       recommendations.push(
-        `${high.length} high-severity connection leaks - investigate application code`
+        `${high.length} high-severity connection leaks - investigate application code`,
       );
     }
 
-    const highRiskApps = patterns.filter((p) => p.leak_probability === 'HIGH');
+    const highRiskApps = patterns.filter((p) => p.leak_probability === "HIGH");
     if (highRiskApps.length > 0) {
       recommendations.push(
-        `${highRiskApps.length} applications with high leak probability - review connection handling`
+        `${highRiskApps.length} applications with high leak probability - review connection handling`,
       );
     }
 
+    recommendations.push("Use try-with-resources or try-finally for connection cleanup in Java");
+    recommendations.push("Set connection timeout in HikariCP: setConnectionTimeout(30000)");
+    recommendations.push("Enable leak detection threshold: setLeakDetectionThreshold(2000)");
+    recommendations.push("Monitor connection pool metrics via JMX or Micrometer");
     recommendations.push(
-      'Use try-with-resources or try-finally for connection cleanup in Java'
+      "Review @Transactional annotation usage and ensure proper rollback handling",
     );
-    recommendations.push(
-      'Set connection timeout in HikariCP: setConnectionTimeout(30000)'
-    );
-    recommendations.push(
-      'Enable leak detection threshold: setLeakDetectionThreshold(2000)'
-    );
-    recommendations.push(
-      'Monitor connection pool metrics via JMX or Micrometer'
-    );
-    recommendations.push(
-      'Review @Transactional annotation usage and ensure proper rollback handling'
-    );
-    recommendations.push(
-      'Check for unclosed ResultSet and Statement objects'
-    );
+    recommendations.push("Check for unclosed ResultSet and Statement objects");
 
     return {
       leaked_connections: leaked,

@@ -41,7 +41,9 @@ export async function jpaMappingTool(input: unknown): Promise<JpaMappingOutput> 
     const { database_name, schema } = validation.data;
     const db = getDb(database_name);
 
-    const schemaFilter = schema ? sql`AND n.nspname = ${schema}` : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
+    const schemaFilter = schema
+      ? sql`AND n.nspname = ${schema}`
+      : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
 
     const mappingQuery = sql<TableEntityMapping>`
       SELECT
@@ -103,34 +105,35 @@ export async function jpaMappingTool(input: unknown): Promise<JpaMappingOutput> 
       LIMIT 20
     `.execute(db);
 
+    const [mappingsResult, orphanedResult] = await Promise.all([mappingQuery, orphanedQuery]);
     const recommendations: string[] = [];
-    const mappings = mappingQuery.rows;
-    const orphaned = orphanedQuery.rows;
+    const mappings = mappingsResult.rows;
+    const orphaned = orphanedResult.rows;
 
-    const missingPk = mappings.filter((m) => m.mapping_status === 'MISSING_PK');
+    const missingPk = mappings.filter((m) => m.mapping_status === "MISSING_PK");
     if (missingPk.length > 0) {
       recommendations.push(
-        `${missingPk.length} tables missing primary keys - JPA entities require @Id annotation`
+        `${missingPk.length} tables missing primary keys - JPA entities require @Id annotation`,
       );
     }
 
-    const nonJpa = mappings.filter((m) => m.mapping_status === 'NON_JPA');
+    const nonJpa = mappings.filter((m) => m.mapping_status === "NON_JPA");
     if (nonJpa.length > 0) {
       recommendations.push(
-        `${nonJpa.length} tables with non-JPA naming conventions - consider renaming for entity mapping`
+        `${nonJpa.length} tables with non-JPA naming conventions - consider renaming for entity mapping`,
       );
     }
 
     if (orphaned.length > 0) {
       recommendations.push(
-        `${orphaned.length} potentially orphaned tables (no foreign keys) - verify if entity mapping exists`
+        `${orphaned.length} potentially orphaned tables (no foreign keys) - verify if entity mapping exists`,
       );
     }
 
     const noIndexes = mappings.filter((m) => m.index_count === 0 && m.foreign_key_count > 0);
     if (noIndexes.length > 0) {
       recommendations.push(
-        `${noIndexes.length} tables with foreign keys but no indexes - consider adding for JPA relationship performance`
+        `${noIndexes.length} tables with foreign keys but no indexes - consider adding for JPA relationship performance`,
       );
     }
 

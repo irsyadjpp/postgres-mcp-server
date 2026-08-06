@@ -86,50 +86,48 @@ export async function migrationTrackingTool(input: unknown): Promise<MigrationTr
       LIMIT 0
     `.execute(db);
 
+    const [flywayResult, liquibaseResult, driftResult] = await Promise.all([
+      flywayQuery,
+      liquibaseQuery,
+      driftQuery,
+    ]);
+
     const recommendations: string[] = [];
-    const flywayMigrations = flywayQuery.rows;
-    const liquibaseMigrations = liquibaseQuery.rows;
-    const drift = driftQuery.rows;
+    const flywayMigrations = flywayResult.rows;
+    const liquibaseMigrations = liquibaseResult.rows;
+    const drift = driftResult.rows;
 
     if (flywayMigrations.length > 0) {
       const failedMigrations = flywayMigrations.filter((m) => !m.success);
       if (failedMigrations.length > 0) {
         recommendations.push(
-          `${failedMigrations.length} failed Flyway migrations detected - review migration scripts`
+          `${failedMigrations.length} failed Flyway migrations detected - review migration scripts`,
         );
       }
     }
 
     if (liquibaseMigrations.length > 0) {
       recommendations.push(
-        `Liquibase migrations detected - ${liquibaseMigrations.length} migrations applied`
+        `Liquibase migrations detected - ${liquibaseMigrations.length} migrations applied`,
       );
     }
 
     if (drift.length > 0) {
       recommendations.push(
-        `${drift.length} schema drift issues detected - run flyway validate or liquibase diff`
+        `${drift.length} schema drift issues detected - run flyway validate or liquibase diff`,
       );
     }
 
     if (flywayMigrations.length === 0 && liquibaseMigrations.length === 0) {
       recommendations.push(
-        'No migration tracking detected - consider adding Flyway or Liquibase for schema versioning'
+        "No migration tracking detected - consider adding Flyway or Liquibase for schema versioning",
       );
     }
 
-    recommendations.push(
-      'Run flyway validate before deploying to production'
-    );
-    recommendations.push(
-      'Use flyway info to check migration status'
-    );
-    recommendations.push(
-      'Configure flyway.baselineOnMigrate for existing databases'
-    );
-    recommendations.push(
-      'Enable migration checksum validation to detect script changes'
-    );
+    recommendations.push("Run flyway validate before deploying to production");
+    recommendations.push("Use flyway info to check migration status");
+    recommendations.push("Configure flyway.baselineOnMigrate for existing databases");
+    recommendations.push("Enable migration checksum validation to detect script changes");
 
     const appliedMigrations = flywayMigrations.length > 0 ? flywayMigrations : liquibaseMigrations;
 

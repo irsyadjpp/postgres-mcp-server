@@ -2,11 +2,11 @@ import { sql } from "kysely";
 import { getDb } from "../db.js";
 import { TransactionMonitorInputSchema, validateInput } from "../validation.js";
 
-const isolationLevels = [
-  'Read Uncommitted',
-  'Read Committed',
-  'Repeatable Read',
-  'Serializable',
+const _isolationLevels = [
+  "Read Uncommitted",
+  "Read Committed",
+  "Repeatable Read",
+  "Serializable",
 ] as const;
 
 export interface ActiveTransaction {
@@ -99,40 +99,42 @@ export async function transactionMonitorTool(input: unknown): Promise<Transactio
       GROUP BY isolation_level
     `.execute(db);
 
+    const [activeResult, isolationResult, deadlockResult] = await Promise.all([
+      activeTxQuery,
+      isolationQuery,
+      deadlockQuery,
+    ]);
+
     const recommendations: string[] = [];
-    const activeTxs = activeTxQuery.rows;
-    const isolationStats = isolationQuery.rows;
+    const activeTxs = activeResult.rows;
+    const isolationStats = isolationResult.rows;
 
     const longRunning = activeTxs.filter((tx) => tx.is_long_running);
     if (longRunning.length > 0) {
       recommendations.push(
-        `${longRunning.length} long-running transactions detected (> 30 seconds) - review @Transactional timeout settings`
+        `${longRunning.length} long-running transactions detected (> 30 seconds) - review @Transactional timeout settings`,
       );
     }
 
-    const idleInTx = activeTxs.filter((tx) => tx.state === 'idle in transaction');
+    const idleInTx = activeTxs.filter((tx) => tx.state === "idle in transaction");
     if (idleInTx.length > 0) {
       recommendations.push(
-        `${idleInTx.length} connections idle in transaction - potential resource leak, ensure proper transaction management`
+        `${idleInTx.length} connections idle in transaction - potential resource leak, ensure proper transaction management`,
       );
     }
 
-    const serializableCount = isolationStats.find((s) => s.isolation_level === 'Serializable');
+    const serializableCount = isolationStats.find((s) => s.isolation_level === "Serializable");
     if (serializableCount && serializableCount.count > 0) {
       recommendations.push(
-        `${serializableCount.count} transactions using Serializable isolation - consider lower isolation levels for better performance`
+        `${serializableCount.count} transactions using Serializable isolation - consider lower isolation levels for better performance`,
       );
     }
 
+    recommendations.push("Set appropriate @Transactional(timeout) values in Spring Boot");
     recommendations.push(
-      'Set appropriate @Transactional(timeout) values in Spring Boot'
+      "Use @Transactional(propagation = Propagation.REQUIRES_NEW) for independent transactions",
     );
-    recommendations.push(
-      'Use @Transactional(propagation = Propagation.REQUIRES_NEW) for independent transactions'
-    );
-    recommendations.push(
-      'Monitor lock_timeout setting to prevent indefinite waits'
-    );
+    recommendations.push("Monitor lock_timeout setting to prevent indefinite waits");
 
     const isolationLevelMap: Record<string, number> = {};
     isolationStats.forEach((stat) => {
@@ -141,7 +143,7 @@ export async function transactionMonitorTool(input: unknown): Promise<Transactio
 
     return {
       active_transactions: activeTxs,
-      deadlocks: deadlockQuery.rows,
+      deadlocks: deadlockResult.rows,
       isolation_level_stats: isolationLevelMap,
       recommendations,
       timestamp: new Date().toISOString(),

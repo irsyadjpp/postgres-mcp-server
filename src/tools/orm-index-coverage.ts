@@ -38,7 +38,9 @@ export async function ormIndexCoverageTool(input: unknown): Promise<OrmIndexCove
     const { database_name, schema } = validation.data;
     const db = getDb(database_name);
 
-    const schemaFilter = schema ? sql`AND n.nspname = ${schema}` : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
+    const schemaFilter = schema
+      ? sql`AND n.nspname = ${schema}`
+      : sql`AND n.nspname NOT IN ('pg_catalog', 'information_schema')`;
 
     const patternQuery = sql<OrmQueryPattern>`
       SELECT
@@ -108,35 +110,32 @@ export async function ormIndexCoverageTool(input: unknown): Promise<OrmIndexCove
       LIMIT 20
     `.execute(db);
 
+    const [patternsResult, missingIndexesResult] = await Promise.all([
+      patternQuery,
+      missingIndexQuery,
+    ]);
+
     const recommendations: string[] = [];
-    const patterns = patternQuery.rows;
-    const missingIndexes = missingIndexQuery.rows;
+    const patterns = patternsResult.rows;
+    const missingIndexes = missingIndexesResult.rows;
 
     const uncovered = patterns.filter((p) => !p.is_covered);
     if (uncovered.length > 0) {
       recommendations.push(
-        `${uncovered.length} columns without indexes - consider adding for @Query WHERE clauses`
+        `${uncovered.length} columns without indexes - consider adding for @Query WHERE clauses`,
       );
     }
 
     if (missingIndexes.length > 0) {
       recommendations.push(
-        `${missingIndexes.length} potential missing indexes for ORM query patterns`
+        `${missingIndexes.length} potential missing indexes for ORM query patterns`,
       );
     }
 
-    recommendations.push(
-      'Review @Query annotations and add corresponding indexes'
-    );
-    recommendations.push(
-      'Use @Index annotation in JPA entities for frequently queried columns'
-    );
-    recommendations.push(
-      'Consider composite indexes for multi-column WHERE clauses'
-    );
-    recommendations.push(
-      'Monitor pg_stat_user_indexes for index usage statistics'
-    );
+    recommendations.push("Review @Query annotations and add corresponding indexes");
+    recommendations.push("Use @Index annotation in JPA entities for frequently queried columns");
+    recommendations.push("Consider composite indexes for multi-column WHERE clauses");
+    recommendations.push("Monitor pg_stat_user_indexes for index usage statistics");
 
     return {
       query_patterns: patterns,

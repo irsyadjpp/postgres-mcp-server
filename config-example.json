@@ -1,0 +1,73 @@
+{
+  "databases": {
+    "default": {
+      "host": "127.0.0.1",
+      "port": 5432,
+      "user": "postgres",
+      "password": "your_password",
+      "database": "postgres",
+      "poolMax": 5,
+      "idleTimeout": 5000,
+      "connectionTimeout": 10000,
+      "ssl": false,
+      "sslRejectUnauthorized": true,
+      "sslAllowSelfSigned": false
+    },
+    "production": {
+      "host": "prod.example.com",
+      "port": 5432,
+      "user": "app_user",
+      "password": "prod_password",
+      "database": "production_db",
+      "poolMax": 10,
+      "idleTimeout": 30000,
+      "connectionTimeout": 15000,
+      "ssl": true,
+      "sslRejectUnauthorized": true,
+      "sslAllowSelfSigned": false
+    },
+    "staging": {
+      "host": "staging.example.com",
+      "port": 5432,
+      "user": "staging_user",
+      "password": "staging_password",
+      "database": "staging_db",
+      "poolMax": 5,
+      "idleTimeout": 10000,
+      "connectionTimeout": 10000,
+      "ssl": true,
+      "sslRejectUnauthorized": false,
+      "sslAllowSelfSigned": true
+    },
+    "analytics": {
+      "host": "analytics.example.com",
+      "port": 5432,
+      "user": "analytics_user",
+      "password": "analytics_password",
+      "database": "analytics_db",
+      "poolMax": 3,
+      "idleTimeout": 60000,
+      "connectionTimeout": 30000,
+      "ssl": true,
+      "sslRejectUnauthorized": true,
+      "sslAllowSelfSigned": false
+    }
+  },
+  "globalSettings": {
+    "readOnly": true,
+    "allowDDL": false,
+    "maxPageSize": 500,
+    "defaultPageSize": 100,
+    "queryTimeout": 30000
+  },
+  "connectionPools": {
+    "hikari": {
+      "minimumIdle": 2,
+      "maximumPoolSize": 10,
+      "connectionTimeout": 30000,
+      "idleTimeout": 600000,
+      "maxLifetime": 1800000,
+      "keepaliveTime": 300000
+    }
+  }
+}

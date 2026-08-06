@@ -1,5 +1,6 @@
 import { sql } from "kysely";
 import { getDb } from "../db.js";
+import { AutovacuumAdvisorInputSchema, validateInput } from "../validation.js";
 
 export interface AutovacuumTableInfo {
   schema_name: string;
@@ -111,10 +112,7 @@ export async function autovacuumAdvisorTool(input: unknown): Promise<AutovacuumA
       LIMIT 50
     `.execute(db);
 
-    const [globalResult, tablesResult] = await Promise.all([
-      globalQuery,
-      tablesQuery,
-    ]);
+    const [globalResult, tablesResult] = await Promise.all([globalQuery, tablesQuery]);
 
     return {
       global_settings: globalResult.rows[0],

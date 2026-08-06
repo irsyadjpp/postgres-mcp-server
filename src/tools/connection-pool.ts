@@ -82,32 +82,33 @@ export async function connectionPoolTool(input: unknown): Promise<ConnectionPool
       LIMIT 20
     `.execute(db);
 
+    const [metricsResult, leakResult] = await Promise.all([metricsQuery, leakQuery]);
     const recommendations: string[] = [];
-    const metrics = metricsQuery.rows[0];
-    const leaks = leakQuery.rows;
+    const metrics = metricsResult.rows[0];
+    const leaks = leakResult.rows;
 
     if (metrics.connection_utilization_pct > 80) {
       recommendations.push(
-        `Connection utilization is ${metrics.connection_utilization_pct}% - consider increasing max_connections or optimizing connection pool size`
+        `Connection utilization is ${metrics.connection_utilization_pct}% - consider increasing max_connections or optimizing connection pool size`,
       );
     }
 
     if (metrics.waiting_connections > 5) {
       recommendations.push(
-        `${metrics.waiting_connections} connections waiting - investigate long-running transactions or connection leaks`
+        `${metrics.waiting_connections} connections waiting - investigate long-running transactions or connection leaks`,
       );
     }
 
     const potentialLeaks = leaks.filter((l) => l.is_potential_leak);
     if (potentialLeaks.length > 0) {
       recommendations.push(
-        `${potentialLeaks.length} potential connection leaks detected (connections held > 5 minutes)`
+        `${potentialLeaks.length} potential connection leaks detected (connections held > 5 minutes)`,
       );
     }
 
     if (metrics.idle_connections > metrics.active_connections * 2) {
       recommendations.push(
-        `High idle connection ratio - consider reducing connection pool size to save resources`
+        `High idle connection ratio - consider reducing connection pool size to save resources`,
       );
     }
 

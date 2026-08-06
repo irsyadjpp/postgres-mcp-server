@@ -31,7 +31,9 @@ export interface OrmPerformanceBaselineOutput {
   timestamp?: string;
 }
 
-export async function ormPerformanceBaselineTool(input: unknown): Promise<OrmPerformanceBaselineOutput> {
+export async function ormPerformanceBaselineTool(
+  input: unknown,
+): Promise<OrmPerformanceBaselineOutput> {
   try {
     const validation = validateInput(OrmPerformanceBaselineInputSchema, input);
     if (!validation.success) {
@@ -76,34 +78,24 @@ export async function ormPerformanceBaselineTool(input: unknown): Promise<OrmPer
       LIMIT 20
     `.execute(db);
 
+    const [baselineResult, trendResult] = await Promise.all([baselineQuery, trendQuery]);
+
     const recommendations: string[] = [];
-    const baselines = baselineQuery.rows;
-    const trends = trendQuery.rows;
+    const baselines = baselineResult.rows;
+    const trends = trendResult.rows;
 
     recommendations.push(
-      'Establish performance baselines for CRUD operations using pg_stat_statements'
+      "Establish performance baselines for CRUD operations using pg_stat_statements",
     );
+    recommendations.push("Monitor query execution time trends after deployments");
+    recommendations.push("Set up alerts for performance regressions > 20%");
+    recommendations.push("Use APM tools (New Relic, Datadog) for ORM performance monitoring");
     recommendations.push(
-      'Monitor query execution time trends after deployments'
+      "Enable Hibernate statistics: spring.jpa.properties.hibernate.generate_statistics=true",
     );
-    recommendations.push(
-      'Set up alerts for performance regressions > 20%'
-    );
-    recommendations.push(
-      'Use APM tools (New Relic, Datadog) for ORM performance monitoring'
-    );
-    recommendations.push(
-      'Enable Hibernate statistics: spring.jpa.properties.hibernate.generate_statistics=true'
-    );
-    recommendations.push(
-      'Monitor entity save/update/delete performance separately'
-    );
-    recommendations.push(
-      'Track N+1 query patterns over time'
-    );
-    recommendations.push(
-      'Use @QueryHints for query optimization hints'
-    );
+    recommendations.push("Monitor entity save/update/delete performance separately");
+    recommendations.push("Track N+1 query patterns over time");
+    recommendations.push("Use @QueryHints for query optimization hints");
 
     return {
       crud_baselines: baselines,

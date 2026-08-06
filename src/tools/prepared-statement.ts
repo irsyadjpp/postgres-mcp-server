@@ -73,35 +73,33 @@ export async function preparedStatementTool(input: unknown): Promise<PreparedSta
       LIMIT 30
     `.execute(db);
 
+    const [statsResult, frequentResult] = await Promise.all([statsQuery, frequentQuery]);
+
     const recommendations: string[] = [];
-    const stats = statsQuery.rows[0];
-    const queries = frequentQuery.rows;
+    const stats = statsResult.rows[0];
+    const queries = frequentResult.rows;
 
     const notPrepared = queries.filter((q) => !q.is_prepared && q.calls > 1000);
     if (notPrepared.length > 0) {
       recommendations.push(
-        `${notPrepared.length} frequently executed queries not using prepared statements - consider JDBC PreparedStatement`
+        `${notPrepared.length} frequently executed queries not using prepared statements - consider JDBC PreparedStatement`,
       );
     }
 
     const slowPrepared = queries.filter((q) => q.is_prepared && q.mean_exec_time_ms > 100);
     if (slowPrepared.length > 0) {
       recommendations.push(
-        `${slowPrepared.length} prepared statements with slow execution - review query plans and indexes`
+        `${slowPrepared.length} prepared statements with slow execution - review query plans and indexes`,
       );
     }
 
     recommendations.push(
-      'Enable prepared statement cache in HikariCP: dataSource.setCachePrepStmts(true)'
+      "Enable prepared statement cache in HikariCP: dataSource.setCachePrepStmts(true)",
     );
+    recommendations.push("Set prepStmtCacheSize in HikariCP (default: 256)");
+    recommendations.push("Use @Query annotations with parameterized queries in Spring Data JPA");
     recommendations.push(
-      'Set prepStmtCacheSize in HikariCP (default: 256)'
-    );
-    recommendations.push(
-      'Use @Query annotations with parameterized queries in Spring Data JPA'
-    );
-    recommendations.push(
-      'Monitor pg_stat_statements for query patterns and optimization opportunities'
+      "Monitor pg_stat_statements for query patterns and optimization opportunities",
     );
 
     return {

@@ -26,7 +26,7 @@ export async function foreignKeyTool(input: unknown): Promise<ForeignKeyPerforma
   try {
     const validation = validateInput(ForeignKeyInputSchema, input);
     if (!validation.success) {
-      return { error: `Input validation failed: ${validation.error}` };
+      return { error: `Input validation failed: ${validation.error}`, missing_indexes: 0 };
     }
 
     const { database_name } = validation.data;
@@ -80,7 +80,8 @@ export async function foreignKeyTool(input: unknown): Promise<ForeignKeyPerforma
       ORDER BY n.nspname, c.relname, con.conname
     `.execute(db);
 
-    const fks = fkQuery.rows;
+    const [fkResult] = await Promise.all([fkQuery]);
+    const fks = fkResult.rows;
     const missingIndexes = fks.filter((fk: ForeignKeyInfo) => !fk.has_index).length;
 
     return {
