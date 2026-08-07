@@ -1,6 +1,6 @@
 # Postgres MCP Server
 
-[![npm version](https://badge.fury.io/js/@irsyadjpp/postgres-mcp-server.svg)](https://www.npmjs.com/package/@irsyadjpp/postgres-mcp-server)
+[![npm version](https://www.npmjs.com/package/@irsyadjpp/postgres-mcp-server/v/1.0.0)
 [![Tests](https://github.com/irsyadjpp/postgres-mcp-server/actions/workflows/test.yml/badge.svg)](https://github.com/irsyadjpp/postgres-mcp-server/actions/workflows/test.yml)
 [![GitHub issues](https://img.shields.io/github/issues/irsyadjpp/postgres-mcp-server)](https://github.com/irsyadjpp/postgres-mcp-server/issues)
 
