@@ -1,72 +1,119 @@
-# Postgres MCP Server
+PostgreSQL MCP Server
 
-[![npm version](https://www.npmjs.com/package/@irsyadjpp/postgres-mcp-server/v/1.0.0)
-[![Tests](https://github.com/irsyadjpp/postgres-mcp-server/actions/workflows/test.yml/badge.svg)](https://github.com/irsyadjpp/postgres-mcp-server/actions/workflows/test.yml)
-[![GitHub issues](https://img.shields.io/github/issues/irsyadjpp/postgres-mcp-server)](https://github.com/irsyadjpp/postgres-mcp-server/issues)
+«A secure Model Context Protocol (MCP) Server for PostgreSQL built with Kysely ORM. It enables AI assistants such as Claude Desktop, GitHub Copilot, Cline, and others to interact with PostgreSQL databases using natural language.»
 
-A Model Context Protocol (MCP) server that provides secure database access to PostgreSQL through Kysely ORM. This server enables Claude Desktop to interact with PostgreSQL databases using natural language.
+""npm version" (https://img.shields.io/npm/v/@irsyadjpp/postgres-mcp-server)" (https://www.npmjs.com/package/@irsyadjpp/postgres-mcp-server)
+""Tests" (https://github.com/irsyadjpp/postgres-mcp-server/actions/workflows/test.yml/badge.svg)" (https://github.com/irsyadjpp/postgres-mcp-server/actions/workflows/test.yml)
+""GitHub issues" (https://img.shields.io/github/issues/irsyadjpp/postgres-mcp-server)" (https://github.com/irsyadjpp/postgres-mcp-server/issues)
 
-## Features
+---
 
-- **Multi-Database Support**: Connect to multiple PostgreSQL databases with lazy initialization
-- **PostgreSQL 12-18 Support**: Advanced monitoring tools for partitioning, replication, WAL, and performance
-- **40+ MCP Tools**: Query execution, table listing, schema inspection, diagnostics, DBA utilities, and Java backend monitoring
-- **Type Safety**: Full TypeScript support with typed inputs/outputs
-- **Connection Pooling**: Configurable connection limits with idle timeout
-- **Error Handling**: Graceful error messages for connection and query issues
-- **Security**: Parameterized queries to prevent SQL injection
+Features
 
-## Installation
+Database
 
-```bash
-npx postgres-mcp-server
-```
+- PostgreSQL 12–18 support
+- Multi-database connections
+- Lazy database initialization
+- Connection pooling
+- Configurable query timeout
+- Read-only mode (default)
+- Parameterized queries (SQL Injection protection)
 
-## Configuration
+MCP Tools
 
-### Option A: Environment Variables (Default)
+More than 40 MCP tools, including:
 
-Configure databases using environment variables. The default database uses the standard `DB_*` variables, while additional databases use the naming convention `DB_<NAME>_*`.
+- SQL Query Execution
+- Schema Inspection
+- Table & Index Explorer
+- Query Explain Plan
+- Database Diagnostics
+- Performance Monitoring
+- PostgreSQL DBA Utilities
+- Spring Boot & Quarkus Monitoring
 
-**Default Database:**
-```env
+PostgreSQL Advanced Features
+
+Supports monitoring for:
+
+- Partitioning
+- WAL
+- Replication
+- Parallel Query
+- Generated Columns
+- JSONB
+- Extended Statistics
+- Autovacuum
+- Backup Progress
+- Extensions
+- Foreign Keys
+- Huge Pages
+
+Java Backend Support
+
+Designed specifically for Java backend engineers.
+
+Includes tools for:
+
+- Spring Boot
+- Hibernate
+- JPA
+- HikariCP
+- Flyway
+- Liquibase
+- JDBC Batch
+- Transaction Monitoring
+- Connection Leak Detection
+
+---
+
+Installation
+
+npx @irsyadjpp/postgres-mcp-server
+
+---
+
+Configuration
+
+The server supports three configuration methods.
+
+Option 1 — Environment Variables (Recommended)
+
+Default Database
+
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_USER=postgres
-DB_PASSWORD=your_password_here
+DB_PASSWORD=your_password
 DB_NAME=postgres
 DB_SSL=true
-```
 
-**Additional Databases:**
-```env
-# Production database
+Additional Databases
+
 DB_PROD_HOST=prod.example.com
 DB_PROD_PORT=5432
 DB_PROD_USER=app_user
-DB_PROD_PASSWORD=prod_password
+DB_PROD_PASSWORD=secret
 DB_PROD_DATABASE=production
-DB_PROD_POOL_MAX=10
 DB_PROD_SSL=true
 
-# Staging database
 DB_STAGING_HOST=staging.example.com
 DB_STAGING_PORT=5432
 DB_STAGING_USER=app_user
-DB_STAGING_PASSWORD=staging_password
+DB_STAGING_PASSWORD=secret
 DB_STAGING_DATABASE=staging
-```
 
-### Option B: JSON Config File
+---
 
-Set `DB_CONFIG_PATH` to point to a JSON configuration file:
+Option 2 — JSON Configuration
 
-```env
+Set:
+
 DB_CONFIG_PATH=/path/to/db-config.json
-```
 
-**db-config.json:**
-```json
+Example:
+
 {
   "databases": [
     {
@@ -80,263 +127,242 @@ DB_CONFIG_PATH=/path/to/db-config.json
       "ssl": true
     },
     {
-      "name": "prod",
+      "name": "production",
       "host": "prod.example.com",
       "port": 5432,
       "user": "app_user",
       "password": "secret",
       "database": "production",
-      "maxConnections": 10
+      "maxConnections": 10,
+      "ssl": true
     }
   ]
 }
-```
 
-### Option C: Dynamic Configuration via Tool Parameters
+---
 
-Tools accept an optional `database_name` parameter to specify which database to use. If not provided, the "default" database is used.
+Option 3 — Dynamic Database Selection
+
+Every tool accepts an optional:
+
+{
+  "database_name": "production"
+}
 
 Example:
-```json
+
 {
-  "sql":SELECT * FROM users",
-  "database_name": "prod"
+  "sql": "SELECT * FROM users",
+  "database_name": "production"
 }
-```
 
-## Available Tools
+---
 
-### Core Tools
+Available Tools
 
-| Tool                  | Description                                 | Required Parameters                 | Optional Parameters                                         |
-| --------------------- | ------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
-| **`query`**           | Execute SQL queries with pagination support | `sql` (string)                      | `pageSize` (1-500), `offset` (number), `parameters` (array), `database_name` (string) |
-| **`describe_table`**  | Get table structure and column details      | `schema` (string), `table` (string) | `database_name` (string)                                   |
-| **`list_objects`**    | List tables, views, or functions in a schema | `type` (enum: tables/views/functions) | `schema` (string), `database_name` (string)                  |
-| **`list_schemas`**    | List all schemas in the database            | -                                   | `includeSystemSchemas` (boolean), `database_name` (string)  |
-| **`list_indexes`**    | List indexes for a table or schema          | `schema` (string)                   | `table` (string), `database_name` (string)                  |
-| **`explain_query`**   | Get query execution plan                    | `sql` (string)                      | `analyze` (boolean), `buffers` (boolean), `costs` (boolean), `format` (text/json/xml/yaml), `database_name` (string) |
-| **`search_objects`**  | Find tables, columns, functions, views by name pattern | `pattern` (string) | `object_types` (array), `schemas` (array), `limit` (1-100), `database_name` (string) |
-| **`get_connections`** | Show active database connections, utilization, and idle-in-transaction warnings | - | `include_queries` (boolean), `group_by` (enum), `database_name` (string) |
-| **`diagnose_database`** | Composite database health check: cache, connections, vacuum, indexes, sequences | - | `include_queries` (boolean), `include_connections` (boolean), `database_name` (string) |
-| **`get_slow_queries`** | Analyze slow queries via pg_stat_statements with filtering and sorting | - | `sort_by` (enum), `limit` (1-50), `min_calls` (number), `min_duration_ms` (number), `include_query_text` (boolean), `database_name` (string) |
+Core Tools
 
-### PostgreSQL 12-18 Advanced Tools
+Tool| Description
+"query"| Execute SQL queries with pagination
+"describe_table"| Describe table structure
+"list_objects"| List tables, views, or functions
+"list_schemas"| List database schemas
+"list_indexes"| Show indexes
+"search_objects"| Search tables, columns, views, functions
+"explain_query"| Explain execution plan
+"get_connections"| Show active connections
+"diagnose_database"| Overall health check
+"get_slow_queries"| Analyze slow queries
 
-| Tool                  | Description                                 | Required Parameters                 | Optional Parameters                                         |
-| --------------------- | ------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
-| **`list_partitions`** | List partitioned tables and monitor partition pruning efficiency (PostgreSQL 12+) | - | `schema` (string), `table` (string), `database_name` (string) |
-| **`replication_status`** | Monitor logical replication: publications, subscriptions, and lag (PostgreSQL 13+) | - | `database_name` (string) |
-| **`progress_report`** | Monitor progress of VACUUM, ANALYZE, CLUSTER, and CREATE INDEX operations | - | `database_name` (string) |
-| **`wal_monitor`** | Monitor WAL size, growth, archive status, and replication slots | - | `database_name` (string) |
-| **`extended_stats`** | List extended statistics and provide recommendations for multi-column correlations | - | `schema` (string), `table` (string), `database_name` (string) |
-| **`index_dedup`** | Identify B-tree indexes that can benefit from deduplication (PostgreSQL 13+) | - | `schema` (string), `table` (string), `database_name` (string) |
-| **`generated_columns`** | List generated columns and monitor their dependencies (PostgreSQL 12+) | - | `schema` (string), `table` (string), `database_name` (string) |
-| **`jsonb_analysis`** | Analyze JSONB columns and recommend GIN indexes for better performance | - | `schema` (string), `table` (string), `database_name` (string) |
-| **`parallel_query`** | Monitor parallel query worker usage and performance | - | `database_name` (string) |
-| **`autovacuum_advisor`** | Analyze autovacuum effectiveness and recommend tuning settings | - | `schema` (string), `table` (string), `database_name` (string) |
-| **`huge_pages`** | Monitor huge pages usage and provide configuration recommendations | - | `database_name` (string) |
-| **`statements_enhanced`** | Enhanced pg_stat_statements analysis with parallel workers and WAL tracking | - | `limit` (1-100), `database_name` (string) |
-| **`foreign_key`** | Monitor foreign key performance and identify missing indexes | - | `schema` (string), `table` (string), `database_name` (string) |
-| **`backup_monitor`** | Monitor pg_basebackup progress and PITR recovery timeline | - | `database_name` (string) |
-| **`extensions`** | List installed extensions, check compatibility, and view dependencies | - | `database_name` (string) |
+---
 
-### Java Backend & Spring Boot Tools
+PostgreSQL 12–18 Monitoring
 
-| Tool                  | Description                                 | Required Parameters                 | Optional Parameters                                         |
-| --------------------- | ------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
-| **`connection_pool`** | Monitor HikariCP connection pool metrics, detect connection leaks, and track wait times | - | `database_name` (string) |
-| **`jpa_mapping`** | Validate database schema against JPA/Hibernate entity mappings | - | `schema` (string), `database_name` (string) |
-| **`orm_performance`** | Analyze ORM query performance, detect N+1 problems, and identify lazy loading issues | - | `database_name` (string) |
-| **`transaction_monitor`** | Monitor active transactions, isolation levels, and detect long-running transactions | - | `database_name` (string) |
-| **`prepared_statement`** | Analyze prepared statement cache hit ratio and query patterns | - | `database_name` (string) |
-| **`migration_tracking`** | Track Flyway/Liquibase migrations, detect schema drift, and validate checksums | - | `database_name` (string) |
-| **`orm_index_coverage`** | Analyze index coverage for ORM @Query annotations and recommend missing indexes | - | `schema` (string), `database_name` (string) |
-| **`jsonb_entity`** | Analyze JSONB columns for @Convert entity attributes and recommend GIN indexes | - | `schema` (string), `database_name` (string) |
-| **`batch_operation`** | Monitor JDBC batch operation performance and efficiency | - | `database_name` (string) |
-| **`sequence_monitor`** | Monitor sequences for JPA @GeneratedValue and detect exhaustion risks | - | `schema` (string), `database_name` (string) |
-| **`timeseries_partition`** | Recommend partitioning strategies for time-series entity tables | - | `schema` (string), `database_name` (string) |
-| **`connection_leak`** | Detect connection leaks and analyze connection acquisition patterns | - | `database_name` (string) |
-| **`deadlock_analysis`** | Analyze deadlock patterns and lock wait information | - | `database_name` (string) |
-| **`jpa_schema_validation`** | Validate Spring Data JPA annotations against database schema | - | `schema` (string), `database_name` (string) |
-| **`orm_performance_baseline`** | Establish and monitor performance baselines for ORM CRUD operations | - | `database_name` (string) |
+Tool
+list_partitions
+replication_status
+progress_report
+wal_monitor
+extended_stats
+index_dedup
+generated_columns
+jsonb_analysis
+parallel_query
+autovacuum_advisor
+huge_pages
+statements_enhanced
+foreign_key
+backup_monitor
+extensions
 
-### Key Features
+---
 
-- **Pagination**: Query tool supports up to 500 rows per page with automatic LIMIT/OFFSET handling
-- **Security**: Parameterized queries prevent SQL injection, READ_ONLY mode by default
-- **Type Safety**: Full TypeScript support with Zod schema validation
-- **PostgreSQL 12-18 Features**: Support for partitioning, logical replication, generated columns, B-tree deduplication, and more
-- **DBA Tools**: Comprehensive monitoring for WAL, replication, autovacuum, parallel queries, and performance tuning
-- **Java Backend Support**: Specialized tools for Spring Boot, Quarkus, Hibernate, and HikariCP monitoring
+Java Backend Tools
 
-## Claude Desktop Configuration
+Tool
+connection_pool
+jpa_mapping
+orm_performance
+transaction_monitor
+prepared_statement
+migration_tracking
+orm_index_coverage
+jsonb_entity
+batch_operation
+sequence_monitor
+timeseries_partition
+connection_leak
+deadlock_analysis
+jpa_schema_validation
+orm_performance_baseline
 
-Configuration examples are available for multiple AI assistants:
+---
 
-| Configuration File | AI Assistant |
-|-------------------|--------------|
-| `claude_config_example.json` | Claude Desktop |
-| `config-cline.json` | Cline (VS Code) |
-| `config-github-copilot.json` | GitHub Copilot Chat |
-| `config-antigravity.json` | Antigravity IDE |
+Key Capabilities
 
-See [CONFIG-GUIDES.md](CONFIG-GUIDES.md) for detailed installation instructions for each assistant.
+- Multi-database support
+- Secure parameterized queries
+- Type-safe validation using Zod
+- Automatic pagination
+- PostgreSQL diagnostics
+- Performance monitoring
+- DBA utilities
+- Spring Boot support
+- Quarkus support
+- Hibernate analysis
 
-### Claude Desktop
+---
 
-Add this server to your Claude Desktop configuration file:
+Claude Desktop Configuration
 
-Edit `claude_desktop_config.json`:
+Example:
 
-**Single Database Configuration:**
-```json
 {
   "mcpServers": {
     "postgres": {
       "command": "npx",
-      "args": ["@irsyadjpp/postgres-mcp-server@latest"],
+      "args": [
+        "@irsyadjpp/postgres-mcp-server@latest"
+      ],
       "env": {
         "DB_HOST": "127.0.0.1",
         "DB_PORT": "5432",
         "DB_USER": "postgres",
-        "DB_PASSWORD": "your_password_here",
-        "DB_NAME": "your_database_name",
+        "DB_PASSWORD": "password",
+        "DB_NAME": "postgres",
         "DB_SSL": "true"
       }
     }
   }
 }
-```
 
-See [CONFIG-GUIDES.md](CONFIG-GUIDES.md) for multi-database configuration and other AI assistants.
+For multi-database examples and other AI assistants, see:
 
-**Multi-Database Configuration:**
-```json
-{
-  "mcpServers": {
-    "postgres-mcp-server": {
-      "command": "npx",
-      "args": ["postgres-mcp-server"],
-      "env": {
-        "DB_HOST": "127.0.0.1",
-        "DB_PORT": "5432",
-        "DB_USER": "postgres",
-        "DB_PASSWORD": "dev_password",
-        "DB_NAME": "development",
-        "DB_SSL": "true",
-        "DB_PROD_HOST": "prod.example.com",
-        "DB_PROD_PORT": "5432",
-        "DB_PROD_USER": "app_user",
-        "DB_PROD_PASSWORD": "prod_password",
-        "DB_PROD_DATABASE": "production",
-        "DB_PROD_SSL": "true"
-      }
-    }
-  }
-}
-```
+- "CONFIG-GUIDES.md"
 
-**Using JSON Config File:**
-```json
-{
-  "mcpServers": {
-    "postgres-mcp-server": {
-      "command": "npx",
-      "args": ["postgres-mcp-server"],
-      "env": {
-        "DB_CONFIG_PATH": "/path/to/db-config.json"
-      }
-    }
-  }
-}
-```
+Supported assistants:
 
-### Configuration File Locations
+- Claude Desktop
+- GitHub Copilot Chat
+- Cline
+- Antigravity IDE
 
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+---
 
-## Development
+Configuration File Locations
 
-```bash
-# Clone and install dependencies
+macOS
+
+~/Library/Application Support/Claude/claude_desktop_config.json
+
+Windows
+
+%APPDATA%\Claude\claude_desktop_config.json
+
+---
+
+Development
+
+Clone the repository:
+
 git clone https://github.com/irsyadjpp/postgres-mcp-server.git
+
 cd postgres-mcp-server
+
 npm install
 
-# Run in development mode with hot reload
+Development:
+
 npm run dev
 
-# Build for production
+Build:
+
 npm run build
 
-# Run tests
-npm run test
+Run all tests:
 
-# Run specific test suites
+npm test
+
+Unit tests:
+
 npm run test:unit
+
+Integration tests:
+
 npm run test:integration
-```
 
-## Environment Variables
+---
 
-| Variable            | Default     | Description                             |
-| ------------------- | ----------- | --------------------------------------- |
-| `DB_HOST`           | `127.0.0.1` | PostgreSQL host (default database)      |
-| `DB_PORT`           | `5432`      | PostgreSQL port (default database)      |
-| `DB_USER`           | `postgres`  | Database user (default database)        |
-| `DB_PASSWORD`       | _required_  | Database password (default database)    |
-| `DB_NAME`           | `postgres`  | Database name (default database)         |
-| `DB_SSL`            | `true`      | Enable SSL connection (default database) |
-| `DB_CONFIG_PATH`    | -           | Path to JSON config file (alternative)   |
-| `DB_<NAME>_HOST`    | -           | Host for additional database            |
-| `DB_<NAME>_PORT`    | `5432`      | Port for additional database             |
-| `DB_<NAME>_USER`    | -           | User for additional database             |
-| `DB_<NAME>_PASSWORD`| -           | Password for additional database         |
-| `DB_<NAME>_DATABASE`| -           | Database name for additional database    |
-| `READ_ONLY`         | `true`      | Restrict to SELECT/WITH/EXPLAIN queries |
-| `QUERY_TIMEOUT`     | `30000`     | Query timeout in milliseconds           |
-| `MAX_PAGE_SIZE`     | `500`       | Maximum rows per page                   |
-| `DEFAULT_PAGE_SIZE` | `100`       | Default page size when not specified    |
+Environment Variables
 
-## Migration Guide
+Variable| Default| Description
+DB_HOST| 127.0.0.1| PostgreSQL host
+DB_PORT| 5432| PostgreSQL port
+DB_USER| postgres| Username
+DB_PASSWORD| —| Password
+DB_NAME| postgres| Database name
+DB_SSL| true| SSL enabled
+DB_CONFIG_PATH| —| JSON config path
+READ_ONLY| true| Restrict to SELECT/EXPLAIN
+QUERY_TIMEOUT| 30000| Query timeout (ms)
+MAX_PAGE_SIZE| 500| Maximum page size
+DEFAULT_PAGE_SIZE| 100| Default page size
 
-### For Existing Single-Database Users
+Additional databases:
 
-Your existing configuration will continue to work without any changes. The server maintains full backward compatibility:
+DB_<NAME>_HOST
+DB_<NAME>_PORT
+DB_<NAME>_USER
+DB_<NAME>_PASSWORD
+DB_<NAME>_DATABASE
+DB_<NAME>_SSL
 
-1. **No changes required** - Your current `.env` file works as-is
-2. **Default behavior** - Tools without `database_name` parameter use the "default" database
-3. **Optional upgrade** - Add additional databases using the naming convention when ready
+---
 
-### Adding Additional Databases
+Migration Guide
 
-To add more databases to your existing setup:
+Existing users require no configuration changes.
 
-1. **Using Environment Variables:**
-   ```env
-   # Add to your existing .env
-   DB_PROD_HOST=prod.example.com
-   DB_PROD_PORT=5432
-   DB_PROD_USER=app_user
-   DB_PROD_PASSWORD=prod_password
-   DB_PROD_DATABASE=production
-   ```
+The server is fully backward compatible.
 
-2. **Using in Tools:**
-   ```json
-   {
-     "sql": "SELECT * FROM users",
-     "database_name": "prod"
-   }
-   ```
+To add another database:
 
-3. **Switch to JSON Config (Optional):**
-   - Create a JSON config file with all your databases
-   - Set `DB_CONFIG_PATH` environment variable
-   - Remove individual `DB_*` variables from `.env`
+DB_PROD_HOST=prod.example.com
+DB_PROD_PORT=5432
+DB_PROD_USER=app_user
+DB_PROD_PASSWORD=secret
+DB_PROD_DATABASE=production
 
-## License
+Then specify:
+
+{
+  "database_name": "prod"
+}
+
+Alternatively, migrate to a JSON configuration using "DB_CONFIG_PATH".
+
+---
+
+License
 
 ISC
